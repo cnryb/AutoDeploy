@@ -10,7 +10,7 @@ var Clone = NodeGit.Clone;
 router.get('/', function (req, res, next) {
     // var num = new Date().getUTCSeconds();
 
-    res.render('index', { title: 'Express' });
+    res.render('index', { title: 'Express '+new Date().Format("yyyy-MM-dd HH:mm:ss:S") });
 });
 
 
@@ -29,7 +29,7 @@ router.post('/', function (req, res, next) {
         if (query.password === "password" && query.hook_name === "push_hooks") {
 
             console.log("密码验证成功");
-            fs.writeFile(logFileName, "\r\n" + new Date().toString() + "        密码验证成功", { flag: "a" });
+            fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "        密码验证成功", { flag: "a" });
 
             var clonePath = "./tmpRepository/clone" + longTime;
             var sshPrivateKey = "./id_rsa";
@@ -56,17 +56,17 @@ router.post('/', function (req, res, next) {
 
             Clone(url, clonePath, opts).then(function (repo) {
                 console.log("clone Repository done.");
-                fs.writeFile(logFileName, "\r\n" + new Date().toString() + "     clone Repository done.", { flag: "a" });
+                fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     clone Repository done.", { flag: "a" });
                 // 复制目录
                 exists(clonePath, './', copy);
                 console.log("copy Repository done.");
-                fs.writeFile(logFileName, "\r\n" + new Date().toString() + "     copy Repository done.", { flag: "a" });
+                fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     copy Repository done.", { flag: "a" });
 
-                fs.writeFile(logFileName, "\r\n" + new Date().toString() + "     all done", { flag: "a" });
+                fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     all done", { flag: "a" });
 
             }).catch(function (error) {
                 console.error(error);
-                fs.writeFile(logFileName, "\r\n" + new Date().toString() + "     error      " + JSON.stringify(error), { flag: "a" });
+                fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     error      " + JSON.stringify(error), { flag: "a" });
             });
         }
     }
@@ -76,6 +76,27 @@ router.post('/', function (req, res, next) {
 
 
 module.exports = router;
+
+
+
+
+
+Date.prototype.Format = function (fmt) { //author: meizz 
+    var o = {
+        "M+": this.getMonth() + 1, //月份 
+        "d+": this.getDate(), //日 
+        "H+": this.getHours(), //小时 
+        "m+": this.getMinutes(), //分 
+        "s+": this.getSeconds(), //秒 
+        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+        "S": this.getMilliseconds() //毫秒 
+    };
+    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+        if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    return fmt;
+}
+
 
 
 
