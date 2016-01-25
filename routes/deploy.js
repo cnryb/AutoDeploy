@@ -16,16 +16,21 @@ router.get('/', function (req, res, next) {
 
 router.post('/', function (req, res, next) {
 
-    var longTime = new Date().getTime();
-    fs.writeFile(path.join("./", "req" + longTime), JSON.stringify(req.body));
     res.render('index', { title: 'Express' });
+
+    var longTime = new Date().getTime();
+    var logFileName = path.join("./log", "deploy" + longTime);
+
+    fs.writeFile(logFileName, JSON.stringify(req.body));
 
     var query = req.body.hook;
     if (query) {
         query = JSON.parse(query);
         if (query.password === "password" && query.hook_name === "push_hooks") {
 
-            console.log("密码验证成功")
+            console.log("密码验证成功");
+            fs.writeFile(logFileName, "\r\n   " + new Date().toString() + "密码验证成功", { flag: "a" });
+
             var clonePath = "./tmpRepository/clone" + longTime;
             var sshPrivateKey = "./id_rsa";
             var sshPublicKey = "./id_rsa.pub";
@@ -51,15 +56,17 @@ router.post('/', function (req, res, next) {
 
             Clone(url, clonePath, opts).then(function (repo) {
                 console.log("clone Repository done.");
+                fs.writeFile(logFileName, "\r\n   " + new Date().toString() + "clone Repository done.", { flag: "a" });
                 // 复制目录
                 exists(clonePath, './', copy);
                 console.log("copy Repository done.");
+                fs.writeFile(logFileName, "\r\n   " + new Date().toString() + "copy Repository done.", { flag: "a" });
 
-                fs.writeFile(path.join("./", "res" + longTime), "done");
+                fs.writeFile(logFileName, "\r\n   " + new Date().toString() + "all done", { flag: "a" });
 
             }).catch(function (error) {
                 console.error(error);
-                fs.writeFile(path.join("./", "res" + longTime), JSON.stringify(error));
+                fs.writeFile(logFileName, "error    " + JSON.stringify(error));
             });
         }
     }
