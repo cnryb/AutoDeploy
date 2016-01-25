@@ -1,3 +1,10 @@
 {
-  "ignoreRoot": [".git", "node_modules", "public"]
+    "ignoreRoot": [
+        ".git",
+        "node_modules",
+        "public",
+        "tmpRepository",
+        "log",
+        "config"
+    ]
 }
