@@ -64,7 +64,7 @@ router.post('/', function (req, res, next) {
                 console.log("clone Repository done.");
                 fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     clone Repository done.", { flag: "a" });
                 // 复制目录
-                exists(clonePath, config.copyTo, copy);
+                exists(clonePath + "/" + config.copyFrom, config.copyTo, copy);
                 console.log("copy Repository done.");
                 fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     copy Repository done.", { flag: "a" });
 
