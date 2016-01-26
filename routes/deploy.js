@@ -10,7 +10,7 @@ var Clone = NodeGit.Clone;
 router.get('/', function (req, res, next) {
     // var num = new Date().getUTCSeconds();
 
-    res.render('index', { title: 'Express '+new Date().Format("yyyy-MM-dd HH:mm:ss:S") });
+    res.render('index', { title: 'Express ' + new Date().Format("yyyy-MM-dd HH:mm:ss:S") });
 });
 
 
@@ -25,17 +25,23 @@ router.post('/', function (req, res, next) {
 
     var query = req.body.hook;
     if (query) {
+        query = query.toLowerCase();
         query = JSON.parse(query);
-        if (query.password === "password" && query.hook_name === "push_hooks") {
+        var name = query.push_data.repository.name;
+
+        var config = fs.readFileSync(path.join("./config", name + ".config"), "utf-8")
+        config = JSON.parse(config);
+
+        if (query.password === config.password && query.hook_name === "push_hooks") {
 
             console.log("密码验证成功");
             fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "        密码验证成功", { flag: "a" });
 
             var clonePath = "./tmpRepository/clone" + longTime;
-            var sshPrivateKey = "./id_rsa";
-            var sshPublicKey = "./id_rsa.pub";
+            var sshPrivateKey = config.sshPrivateKey;
+            var sshPublicKey = config.sshPublicKey;
 
-            var url = "git@git.oschina.net:cnryb/AutoDeploy.git";
+            var url = config.repository;
             var opts = {
                 fetchOpts: {
                     callbacks: {
@@ -58,7 +64,7 @@ router.post('/', function (req, res, next) {
                 console.log("clone Repository done.");
                 fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     clone Repository done.", { flag: "a" });
                 // 复制目录
-                exists(clonePath, './', copy);
+                exists(clonePath, config.copyTo, copy);
                 console.log("copy Repository done.");
                 fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     copy Repository done.", { flag: "a" });
 
