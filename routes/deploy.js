@@ -29,7 +29,7 @@ router.post('/', function (req, res, next) {
         var name = query.push_data.repository.name;
         fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "        开始接收   " + name, { flag: "a" });
 
-        var config = fs.readFileSync(path.join("./config", name + ".config"), "utf-8")
+        var config = fs.readFileSync(path.join("./config", name.toLowerCase() + ".config"), "utf-8")
         config = JSON.parse(config);
 
         if (query.password === config.password && query.hook_name === "push_hooks") {
