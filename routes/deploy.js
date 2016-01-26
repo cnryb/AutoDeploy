@@ -25,7 +25,6 @@ router.post('/', function (req, res, next) {
 
     var query = req.body.hook;
     if (query) {
-        query = query.toLowerCase();
         query = JSON.parse(query);
         var name = query.push_data.repository.name;
         fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "        开始接收   " + name, { flag: "a" });
