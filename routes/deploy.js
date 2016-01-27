@@ -82,7 +82,7 @@ router.post('/', function (req, res, next) {
 
                 fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     all done", { flag: "a" });
 
-                mailOptions.subject = name + "项目已经成功为您自动部署";
+                mailOptions.subject = name + " 项目已经成功为您自动部署";
                 mailOptions.html = mailOptions.subject + "<br><br>"
 
                 mailOptions.html += readLog(logFileName);
