@@ -21,13 +21,13 @@ router.post('/', function (req, res, next) {
     var longTime = new Date().getTime();
     var logFileName = path.join("./log", "deploy" + longTime);
 
-    fs.writeFile(logFileName, JSON.stringify(req.body));
+    fs.writeFileSync(logFileName, JSON.stringify(req.body));
 
     var query = req.body.hook;
     if (query) {
         query = JSON.parse(query);
         var name = query.push_data.repository.name;
-        fs.writeFile(logFileName, "\r\n" + getNowTime() + "        开始处理   " + name, { flag: "a" });
+        fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "        开始处理   " + name, { flag: "a" });
 
         var config = fs.readFileSync(path.join("./config", name.toLowerCase() + ".config"), "utf-8")
         config = JSON.parse(config);
@@ -35,7 +35,7 @@ router.post('/', function (req, res, next) {
         if (query.password === config.password && query.hook_name === "push_hooks") {
 
             console.log("密码验证成功");
-            fs.writeFile(logFileName, "\r\n" + getNowTime() + "        密码验证成功", { flag: "a" });
+            fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "        密码验证成功", { flag: "a" });
 
             var clonePath = "./tmpRepository/clone" + longTime;
             var sshPrivateKey = config.sshPrivateKey;
@@ -73,13 +73,13 @@ router.post('/', function (req, res, next) {
 
             Clone(url, clonePath, opts).then(function (repo) {
                 console.log("clone Repository done.");
-                fs.writeFile(logFileName, "\r\n" + getNowTime() + "     clone Repository done.", { flag: "a" });
+                fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     clone Repository done.", { flag: "a" });
                 // 复制目录
                 exists(clonePath + "/" + config.copyFrom, config.copyTo, copy);
                 console.log("copy Repository done.");
-                fs.writeFile(logFileName, "\r\n" + getNowTime() + "     copy Repository done.", { flag: "a" });
+                fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     copy Repository done.", { flag: "a" });
 
-                fs.writeFile(logFileName, "\r\n" + getNowTime() + "     all done", { flag: "a" });
+                fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     all done", { flag: "a" });
 
                 mailOptions.subject = name + "项目已经成功为您自动部署";
                 mailOptions.html = mailOptions.subject + "<br><br>"
@@ -88,18 +88,18 @@ router.post('/', function (req, res, next) {
 
                 transporter.sendMail(mailOptions, function (error, info) {
                     if (error) {
-                        fs.writeFile(logFileName, "\r\n" + getNowTime() + "     部署完成，发送邮件通知失败      " + error, { flag: "a" });
+                        fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署完成，发送邮件通知失败      " + error, { flag: "a" });
                         return console.log(error);
                     }
                     console.log('Message sent: ' + info.response);
-                    fs.writeFile(logFileName, "\r\n" + getNowTime() + "     部署完成，发送邮件通知成功      " + info.response, { flag: "a" });
+                    fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署完成，发送邮件通知成功      " + info.response, { flag: "a" });
                 });
 
 
             }).catch(function (error) {
                 console.error(error);
 
-                fs.writeFile(logFileName, "\r\n" + getNowTime() + "     error      " + JSON.stringify(error), { flag: "a" });
+                fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     error      " + JSON.stringify(error), { flag: "a" });
 
                 mailOptions.subject = name + "项目自动部署失败";
                 mailOptions.html = mailOptions.subject + "，请您及时处理。<br><br>"
@@ -107,10 +107,10 @@ router.post('/', function (req, res, next) {
 
                 transporter.sendMail(mailOptions, function (error, info) {
                     if (error) {
-                        fs.writeFile(logFileName, "\r\n" + getNowTime() + "     部署失败，发送邮件通知失败      " + error, { flag: "a" });
+                        fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署失败，发送邮件通知失败      " + error, { flag: "a" });
                         return console.log(error);
                     }
-                    fs.writeFile(logFileName, "\r\n" + getNowTime() + "     部署失败，发送邮件通知成功      " + error, { flag: "a" });
+                    fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署失败，发送邮件通知成功      " + error, { flag: "a" });
                     console.log('Message sent: ' + info.response);
                 });
             });
