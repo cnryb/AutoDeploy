@@ -21,7 +21,7 @@ router.post('/', function (req, res, next) {
     var longTime = new Date().getTime();
     var logFileName = path.join("./log", "deploy" + longTime);
 
-    fs.writeFileSync(logFileName, JSON.stringify(req.body));
+    fs.writeFileSync(logFileName, getNowTime() + "        接收到的 req body 数据   " + JSON.stringify(req.body));
 
     var query = req.body.hook;
     if (query) {
@@ -71,6 +71,7 @@ router.post('/', function (req, res, next) {
             };
 
 
+            fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     begin clone Repository " + url, { flag: "a" });
             Clone(url, clonePath, opts).then(function (repo) {
                 console.log("clone Repository done.");
                 fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     clone Repository done.", { flag: "a" });
