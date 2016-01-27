@@ -83,14 +83,16 @@ router.post('/', function (req, res, next) {
 
                 mailOptions.subject = name + "项目已经成功为您自动部署";
                 mailOptions.html = mailOptions.subject + "<br><br>"
-                
+
                 mailOptions.html += readLog(logFileName);
 
                 transporter.sendMail(mailOptions, function (error, info) {
                     if (error) {
+                        fs.writeFile(logFileName, "\r\n" + getNowTime() + "     部署完成，发送邮件通知失败      " + error, { flag: "a" });
                         return console.log(error);
                     }
                     console.log('Message sent: ' + info.response);
+                    fs.writeFile(logFileName, "\r\n" + getNowTime() + "     部署完成，发送邮件通知成功      " + info.response, { flag: "a" });
                 });
 
 
@@ -105,8 +107,10 @@ router.post('/', function (req, res, next) {
 
                 transporter.sendMail(mailOptions, function (error, info) {
                     if (error) {
+                        fs.writeFile(logFileName, "\r\n" + getNowTime() + "     部署失败，发送邮件通知失败      " + error, { flag: "a" });
                         return console.log(error);
                     }
+                    fs.writeFile(logFileName, "\r\n" + getNowTime() + "     部署失败，发送邮件通知成功      " + error, { flag: "a" });
                     console.log('Message sent: ' + info.response);
                 });
             });
@@ -124,7 +128,8 @@ module.exports = router;
 
 function readLog(filePath) {
     var log = fs.readFileSync(filePath, "utf-8")
-    log = log.replace(/\r\n/, "<br>");
+    log = log.replace(/\r\n/g, "<br>");
+    log = log.replace(/\n/g, "<br>");
     return log;
 }
 
