@@ -3,14 +3,14 @@ var router = express.Router();
 var fs = require("fs");
 var path = require('path');
 var NodeGit = require("nodegit");
+var nodemailer = require('nodemailer');
+
 var Repository = NodeGit.Repository;
 var Clone = NodeGit.Clone;
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
-    // var num = new Date().getUTCSeconds();
-
-    res.render('index', { title: 'Express ' + new Date().Format("yyyy-MM-dd HH:mm:ss:S") });
+    res.render('index', { title: 'Express ' + getNowTime() });
 });
 
 
@@ -27,7 +27,7 @@ router.post('/', function (req, res, next) {
     if (query) {
         query = JSON.parse(query);
         var name = query.push_data.repository.name;
-        fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "        开始接收   " + name, { flag: "a" });
+        fs.writeFile(logFileName, "\r\n" + getNowTime() + "        开始处理   " + name, { flag: "a" });
 
         var config = fs.readFileSync(path.join("./config", name.toLowerCase() + ".config"), "utf-8")
         config = JSON.parse(config);
@@ -35,7 +35,7 @@ router.post('/', function (req, res, next) {
         if (query.password === config.password && query.hook_name === "push_hooks") {
 
             console.log("密码验证成功");
-            fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "        密码验证成功", { flag: "a" });
+            fs.writeFile(logFileName, "\r\n" + getNowTime() + "        密码验证成功", { flag: "a" });
 
             var clonePath = "./tmpRepository/clone" + longTime;
             var sshPrivateKey = config.sshPrivateKey;
@@ -60,19 +60,55 @@ router.post('/', function (req, res, next) {
                 }
             };
 
+
+            var transporter = nodemailer.createTransport(config.mailConfig.serverConfig);
+
+            var mailOptions = {
+                from: config.mailConfig.from, // sender address
+                to: config.mailConfig.to, // list of receivers
+                subject: '', // Subject line
+                html: '' // html body
+            };
+
+
             Clone(url, clonePath, opts).then(function (repo) {
                 console.log("clone Repository done.");
-                fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     clone Repository done.", { flag: "a" });
+                fs.writeFile(logFileName, "\r\n" + getNowTime() + "     clone Repository done.", { flag: "a" });
                 // 复制目录
                 exists(clonePath + "/" + config.copyFrom, config.copyTo, copy);
                 console.log("copy Repository done.");
-                fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     copy Repository done.", { flag: "a" });
+                fs.writeFile(logFileName, "\r\n" + getNowTime() + "     copy Repository done.", { flag: "a" });
 
-                fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     all done", { flag: "a" });
+                fs.writeFile(logFileName, "\r\n" + getNowTime() + "     all done", { flag: "a" });
+
+                mailOptions.subject = name + "项目已经成功为您自动部署";
+                mailOptions.html = mailOptions.subject + "<br><br>"
+                
+                mailOptions.html += readLog(logFileName);
+
+                transporter.sendMail(mailOptions, function (error, info) {
+                    if (error) {
+                        return console.log(error);
+                    }
+                    console.log('Message sent: ' + info.response);
+                });
+
 
             }).catch(function (error) {
                 console.error(error);
-                fs.writeFile(logFileName, "\r\n" + new Date().Format("yyyy-MM-dd HH:mm:ss:S") + "     error      " + JSON.stringify(error), { flag: "a" });
+
+                fs.writeFile(logFileName, "\r\n" + getNowTime() + "     error      " + JSON.stringify(error), { flag: "a" });
+
+                mailOptions.subject = name + "项目自动部署失败";
+                mailOptions.html = mailOptions.subject + "，请您及时处理。<br><br>"
+                mailOptions.html += readLog(logFileName);
+
+                transporter.sendMail(mailOptions, function (error, info) {
+                    if (error) {
+                        return console.log(error);
+                    }
+                    console.log('Message sent: ' + info.response);
+                });
             });
         }
     }
@@ -84,6 +120,19 @@ router.post('/', function (req, res, next) {
 module.exports = router;
 
 
+
+
+function readLog(filePath) {
+    var log = fs.readFileSync(filePath, "utf-8")
+    log = log.replace(/\r\n/, "<br>");
+    return log;
+}
+
+
+
+function getNowTime() {
+    return new Date().Format("yyyy-MM-dd HH:mm:ss:S");
+}
 
 
 
