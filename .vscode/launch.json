@@ -5,7 +5,7 @@
 			"name": "Launch",
 			"type": "node",
 			"request": "launch",
-			"program": "./bin/www",
+			"program": "./bin/www_autodeploy",
 			"stopOnEntry": false,
 			"args": [],
 			"cwd": ".",
