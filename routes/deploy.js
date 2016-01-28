@@ -87,11 +87,16 @@ router.post('/', function (req, res, next) {
 
                 mailOptions.html += readLog(logFileName);
 
+                fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署完成，准备开始发送邮件通知", { flag: "a" });
+                
+                console.log("部署完成，准备开始发送邮件通知");
+                
                 transporter.sendMail(mailOptions, function (error, info) {
                     if (error) {
                         fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署完成，发送邮件通知失败      " + error, { flag: "a" });
                         return console.log(error);
                     }
+                    console.log('部署完成，发送邮件通知成功：' + info.response);
                     console.log('Message sent: ' + info.response);
                     fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署完成，发送邮件通知成功      " + info.response, { flag: "a" });
                 });
