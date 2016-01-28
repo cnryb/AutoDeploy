@@ -32,6 +32,8 @@ router.post('/', function (req, res, next) {
         var config = fs.readFileSync(path.join("./config", name.toLowerCase() + ".config"), "utf-8")
         config = JSON.parse(config);
 
+        console.log("接收到 " + name + " 的部署请求");
+
         if (query.password === config.password && query.hook_name === "push_hooks") {
 
             console.log("密码验证成功");
@@ -88,9 +90,9 @@ router.post('/', function (req, res, next) {
                 mailOptions.html += readLog(logFileName);
 
                 fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署完成，准备开始发送邮件通知", { flag: "a" });
-                
+
                 console.log("部署完成，准备开始发送邮件通知");
-                
+
                 transporter.sendMail(mailOptions, function (error, info) {
                     if (error) {
                         fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署完成，发送邮件通知失败      " + error, { flag: "a" });
