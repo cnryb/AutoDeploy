@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nohup supervisor ./bin/www_autodeploy"
+    "start": "nohup nodemon ./bin/www_autodeploy"
   },
   "dependencies": {
     "body-parser": "~1.13.2",
