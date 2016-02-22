@@ -10,7 +10,7 @@ var Clone = NodeGit.Clone;
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
-    res.render('index', { title: 'Express ,oh!!!' + getNowTime() });
+    res.render('index', { title: 'Express ,oh!!' + getNowTime() });
 });
 
 
