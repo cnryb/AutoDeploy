@@ -9,12 +9,12 @@ var Repository = NodeGit.Repository;
 var Clone = NodeGit.Clone;
 
 /* GET home page. */
-router.get('/', function (req, res, next) {
+router.get('/', function(req, res, next) {
     res.render('index', { title: 'Express ,oh!!' + getNowTime() });
 });
 
 
-router.post('/', function (req, res, next) {
+router.post('/', function(req, res, next) {
 
     res.render('index', { title: 'Express' });
 
@@ -47,10 +47,10 @@ router.post('/', function (req, res, next) {
             var opts = {
                 fetchOpts: {
                     callbacks: {
-                        certificateCheck: function () {
+                        certificateCheck: function() {
                             return 1;
                         },
-                        credentials: function (url, userName) {
+                        credentials: function(url, userName) {
                             //return NodeGit.Cred.sshKeyFromAgent(userName);        //使用agent方式获取代码
                             return NodeGit.Cred.sshKeyNew(
                                 userName,
@@ -74,11 +74,12 @@ router.post('/', function (req, res, next) {
 
 
             fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     begin clone Repository " + url, { flag: "a" });
-            Clone(url, clonePath, opts).then(function (repo) {
+            Clone(url, clonePath, opts).then(function(repo) {
                 console.log("clone Repository done.");
                 fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     clone Repository done.", { flag: "a" });
                 // 复制目录
-                exists(clonePath + "/" + config.copyFrom, config.copyTo, copy);
+                exists(clonePath + "/" + config.copyFrom, config.copyTo, null, copy);
+
                 console.log("copy Repository done.");
                 fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     copy Repository done.", { flag: "a" });
 
@@ -93,7 +94,8 @@ router.post('/', function (req, res, next) {
 
                 console.log("部署完成，准备开始发送邮件通知");
 
-                transporter.sendMail(mailOptions, function (error, info) {
+                //发送邮件通知
+                transporter.sendMail(mailOptions, function(error, info) {
                     if (error) {
                         fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署完成，发送邮件通知失败      " + error, { flag: "a" });
                         return console.log(error);
@@ -104,7 +106,7 @@ router.post('/', function (req, res, next) {
                 });
 
 
-            }).catch(function (error) {
+            }).catch(function(error) {
                 console.error(error);
 
                 fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     error      " + JSON.stringify(error), { flag: "a" });
@@ -113,7 +115,7 @@ router.post('/', function (req, res, next) {
                 mailOptions.html = mailOptions.subject + "，请您及时处理。<br><br>"
                 mailOptions.html += readLog(logFileName);
 
-                transporter.sendMail(mailOptions, function (error, info) {
+                transporter.sendMail(mailOptions, function(error, info) {
                     if (error) {
                         fs.writeFileSync(logFileName, "\r\n" + getNowTime() + "     部署失败，发送邮件通知失败      " + error, { flag: "a" });
                         return console.log(error);
@@ -122,6 +124,10 @@ router.post('/', function (req, res, next) {
                     console.log('Message sent: ' + info.response);
                 });
             });
+
+        } else {
+            //密码不正确
+
         }
     }
 
@@ -149,7 +155,7 @@ function getNowTime() {
 
 
 
-Date.prototype.Format = function (fmt) { //author: meizz 
+Date.prototype.Format = function(fmt) { //author: meizz 
     var o = {
         "M+": this.getMonth() + 1, //月份 
         "d+": this.getDate(), //日 
@@ -171,22 +177,48 @@ Date.prototype.Format = function (fmt) { //author: meizz
 
 var stat = fs.stat;
 
+var isExclude = function(src, path, excludes) {
+    if (excludes) {
+        for (var i = 0; i < excludes.length; i++) {
+            if (src + path == src + excludes[i]) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
 /*
  * 复制目录中的所有文件包括子目录
  * @param{ String } 需要复制的目录
  * @param{ String } 复制到指定的目录
  */
-var copy = function (src, dst) {
+var copy = function(src, dst, exclude) {
     // 读取目录中的所有文件/目录
-    fs.readdir(src, function (err, paths) {
+    fs.readdir(src, function(err, paths) {
         if (err) {
             throw err;
         }
-        paths.forEach(function (path) {
+        paths.forEach(function(path) {
             var _src = src + '/' + path,
                 _dst = dst + '/' + path,
                 readable, writable;
-            stat(_src, function (err, st) {
+
+            if (exclude) {
+                if (exclude.folders) {
+                    if (isExclude(src, path, exclude.folders))
+                        return;
+                }
+
+                if (exclude.files) {
+                    if (isExclude(src, path, exclude.files))
+                        return;
+                }
+            }
+            
+            stat(_src, function(err, st) {
                 if (err) {
                     throw err;
                 }
@@ -195,7 +227,7 @@ var copy = function (src, dst) {
                     // 创建读取流
                     readable = fs.createReadStream(_src);
                     // 创建写入流
-                    writable = fs.createWriteStream(_dst);   
+                    writable = fs.createWriteStream(_dst);
                     // 通过管道来传输流
                     readable.pipe(writable);
                 }
@@ -208,16 +240,16 @@ var copy = function (src, dst) {
     });
 };
 // 在复制目录前需要判断该目录是否存在，不存在需要先创建目录
-var exists = function (src, dst, callback) {
-    fs.exists(dst, function (exists) {
+var exists = function(src, dst, exclude, callback) {
+    fs.exists(dst, function(exists) {
         // 已存在
         if (exists) {
-            callback(src, dst);
+            callback(src, dst, exclude);
         }
         // 不存在
         else {
-            fs.mkdir(dst, function () {
-                callback(src, dst);
+            fs.mkdir(dst, function() {
+                callback(src, dst, exclude);
             });
         }
     });
